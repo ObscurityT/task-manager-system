@@ -1,6 +1,8 @@
 package com.amanda.manager.tasks.service;
 
 import com.amanda.manager.tasks.entity.Task;
+import com.amanda.manager.tasks.exception.InvalidTaskException;
+import com.amanda.manager.tasks.exception.TaskNotFoundException;
 import com.amanda.manager.tasks.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
@@ -27,7 +29,7 @@ public class TaskService {
 
 
     public Task findById(Long id) {
-        return taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+        return taskRepository.findById(id).orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
     }
 
 
@@ -45,11 +47,11 @@ public class TaskService {
 
     public Task addTask(Task task) {
         if (task.getTitle() == null || task.getTitle().isEmpty()) {
-            throw new IllegalArgumentException("Task must have a title");
+            throw new InvalidTaskException("Task must have a title");
         }
 
         if (task.getDeadlineDate() != null && task.getDeadlineDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Deadline cannot be in the past");
+                throw new InvalidTaskException("Deadline cannot be in the past");
         }
 
         return taskRepository.save(task);
@@ -58,7 +60,7 @@ public class TaskService {
 
     public void removeTask(Long taskId) {
         if (!taskRepository.existsById(taskId)) {
-            throw new IllegalArgumentException(("Task with ID") + taskId + "does not exist");
+            throw new TaskNotFoundException(("Task with ID") + taskId + "does not exist");
         }
 
         taskRepository.deleteById(taskId);

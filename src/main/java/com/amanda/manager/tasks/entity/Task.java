@@ -1,19 +1,18 @@
 package com.amanda.manager.tasks.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.amanda.manager.tasks.enums.TaskStatus;
+import com.amanda.manager.tasks.enums.TaskPriority;
 import java.time.LocalDateTime;
+
 
 @Entity
 public class Task {
 
-
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name= "username", nullable = false, length = 100)
@@ -25,11 +24,13 @@ public class Task {
     @Column(name = "description",nullable = false, length = 500)
     private String description;
 
-    @Column(name = "status",nullable = false, length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private TaskStatus status;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority")
-    private String priority;
+    private TaskPriority priority;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -37,17 +38,20 @@ public class Task {
     
     @Column(name = "deadline_date", nullable = true)
     private LocalDateTime deadlineDate;
-    private boolean done;
+
+    @Column(name = "done", nullable = false)
+    private boolean done = false;
 
 
-    public Task(String user, String title, String description, String status, LocalDateTime deadlineDate)
+    public Task (){}
+
+    public Task(String user, String title, String description, TaskStatus status,TaskPriority priority ,LocalDateTime deadlineDate)
     {
         this.user = user;
         this.title = title;
         this.description = description;
-        this.status = status;
+        this.status = status != null ? status : TaskStatus.PENDING; // Se status não for passado, começa como PENDING
         this.deadlineDate = deadlineDate;
-        this.done = false;
     }
 
     public Long getId(){return id;}
@@ -79,12 +83,23 @@ public class Task {
         this.description = description;
     }
 
-    public String getStatus() {
+    public TaskStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setStatus(TaskStatus status) {
+        if (status != null){
+            this.status = status;
+        }
+    }
+
+    public TaskPriority getPriority() {
+        return priority;
+    }
+
+    public void SetPriority(TaskPriority priority)
+    {
+        this.priority = priority;
     }
 
     public LocalDateTime getCreatedAt() {

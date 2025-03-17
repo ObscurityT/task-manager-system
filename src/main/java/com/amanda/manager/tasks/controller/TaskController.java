@@ -9,8 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-    @RestController
+@RestController
     @RequestMapping("/tasks")
     public class TaskController {
 
@@ -21,10 +22,21 @@ import java.util.List;
     @Autowired
     private TaskRepository taskRepository;
 
-    @GetMapping
-    public List<Task> getAllTasks()
+    @GetMapping("/tasks")
+    public ResponseEntity<List<TaskDTO>> getAllTasks()
     {
-        return taskService.getAllTasks();
+        List<Task>tasks = taskService.getAllTasks();
+        List<TaskDTO> taskDTOS = tasks.stream().map(TaskDTO::new).collect(Collectors.toList());
+        return ResponseEntity.ok(taskDTOS);
+    }
+
+    @GetMapping("/tasks/{id}")
+    public ResponseEntity<TaskDTO>getTaskbyId(@PathVariable Long id)
+    {
+        Task task = taskService.findById(id);
+
+        TaskDTO taskDTO = new TaskDTO(task);
+        return ResponseEntity.ok(taskDTO);
     }
 
     @PostMapping
@@ -34,10 +46,10 @@ import java.util.List;
     }
 
     @PutMapping("/{id}")
-    public TaskDTO updateTask(@RequestBody TaskDTO taskDTO)
+    public TaskDTO updateTask(@PathVariable Long id, @RequestBody TaskDTO taskDTO)
     {
         Task updateTask = taskService.updateTask
-                (taskDTO.getId(),
+                (id,
                         taskDTO.getTitle(),
                         taskDTO.getDeadlineDate(),
                         taskDTO.getDone());
