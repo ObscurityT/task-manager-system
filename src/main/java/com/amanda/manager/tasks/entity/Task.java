@@ -21,7 +21,7 @@ public class Task {
     @Column(name = "title",nullable = false, length = 200)
     private String title;
 
-    @Column(name = "description",nullable = false, length = 500)
+    @Column(name = "description",nullable = true, length = 500)
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -39,9 +39,6 @@ public class Task {
     @Column(name = "deadline_date", nullable = true)
     private LocalDateTime deadlineDate;
 
-    @Column(name = "done", nullable = false)
-    private boolean done = false;
-
 
     public Task (){}
 
@@ -51,6 +48,7 @@ public class Task {
         this.title = title;
         this.description = description;
         this.status = status != null ? status : TaskStatus.PENDING; // Se status não for passado, começa como PENDING
+        this.priority = priority;
         this.deadlineDate = deadlineDate;
     }
 
@@ -97,7 +95,7 @@ public class Task {
         return priority;
     }
 
-    public void SetPriority(TaskPriority priority)
+    public void setPriority(TaskPriority priority)
     {
         this.priority = priority;
     }
@@ -118,12 +116,5 @@ public class Task {
         this.deadlineDate = deadlineDate;
     }
 
-    public boolean getDone() {
-        return done;
-    }
-
-    public void setDone(boolean done) {
-        this.done = done;
-    }
 
 }

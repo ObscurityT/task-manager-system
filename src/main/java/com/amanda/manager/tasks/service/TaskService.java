@@ -1,6 +1,8 @@
 package com.amanda.manager.tasks.service;
 
 import com.amanda.manager.tasks.entity.Task;
+import com.amanda.manager.tasks.enums.TaskPriority;
+import com.amanda.manager.tasks.enums.TaskStatus;
 import com.amanda.manager.tasks.exception.InvalidTaskException;
 import com.amanda.manager.tasks.exception.TaskNotFoundException;
 import com.amanda.manager.tasks.repository.TaskRepository;
@@ -33,16 +35,12 @@ public class TaskService {
     }
 
 
-    public List<Task> filterByDone(boolean done) {
-        return taskRepository.findByDone(done);
-    }
-
     public List<Task> filterByDeadlineDateBetween(LocalDateTime start, LocalDateTime end) {
         return taskRepository.findByDeadlineDateBetween(start, end);
     }
 
-    public List<Task> filterByStatusAndDeadline(boolean done, LocalDateTime start, LocalDateTime end) {
-        return taskRepository.filterByStatusAndDeadline(done, start, end);
+    public List<Task> searchTasks(TaskStatus status, String user, LocalDateTime startDate, LocalDateTime endDate, TaskPriority priority) {
+        return taskRepository.searchTasks(status,user, startDate, endDate, priority);
     }
 
     public Task addTask(Task task) {
@@ -66,7 +64,7 @@ public class TaskService {
         taskRepository.deleteById(taskId);
     }
 
-    public Task updateTask(Long taskId, String title, LocalDateTime deadlineDate, Boolean done) {
+    public Task updateTask(Long taskId, String title, LocalDateTime deadlineDate, TaskStatus status) {
 
       Task existingTask = findById(taskId);
 
@@ -80,9 +78,9 @@ public class TaskService {
           existingTask.setDeadlineDate(deadlineDate);
       }
 
-      if (done != null)
+      if (status != null)
       {
-          existingTask.setDone(done);
+          existingTask.setStatus(status);
       }
 
      return taskRepository.save(existingTask);

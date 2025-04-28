@@ -1,7 +1,8 @@
 package com.amanda.manager.tasks.repository;
 import  com.amanda.manager.tasks.entity.Task;
 
-import com.sun.source.util.TaskListener;
+import com.amanda.manager.tasks.enums.TaskPriority;
+import com.amanda.manager.tasks.enums.TaskStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,14 +15,19 @@ import java.util.List;
 public interface TaskRepository extends JpaRepository <Task, Long>{
 
     //custom methods
-    List<Task> findByDone(boolean done);
-
     List<Task> findByDeadlineDateBetween(LocalDateTime start, LocalDateTime end);
 
     List<Task> findByTitle(String title);
 
-    @Query("SELECT t FROM Task t WHERE t.done = :done AND t.deadlineDate BETWEEN :start AND :end")
-    List<Task> filterByStatusAndDeadline(@Param("done") boolean done,@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    @Query("SELECT t FROM Task t WHERE "
+            + "(:status IS NULL OR t.status = :status) AND "
+            + "(:user IS NULL OR t.user = :user) AND "
+            + "(:startDate IS NULL OR t.deadlineDate >= :startDate) AND "
+            + "(:endDate IS NULL OR t.deadlineDate <= :endDate) AND "
+            + "(:priority IS NULL OR t.priority = :priority)")
+    List<Task> searchTasks(@Param("status") TaskStatus status,@Param("user") String user,@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate,
+    @Param("priority") TaskPriority priority);
+
 
 
 }
