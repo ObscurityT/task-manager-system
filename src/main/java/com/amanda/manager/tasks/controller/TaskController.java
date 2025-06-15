@@ -4,8 +4,12 @@ import com.amanda.manager.tasks.dto.TaskDTO;
 import com.amanda.manager.tasks.entity.Task;
 import com.amanda.manager.tasks.enums.TaskPriority;
 import com.amanda.manager.tasks.enums.TaskStatus;
-import com.amanda.manager.tasks.repository.TaskRepository;
 import com.amanda.manager.tasks.service.TaskService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Tasks", description = "Endpoints for managing tasks")
 @RestController
     @RequestMapping("/tasks")
     public class TaskController {
@@ -24,6 +29,7 @@ import java.util.stream.Collectors;
     private TaskService taskService;
 
 
+    @Operation(summary = "get all tasks", description = "Returns all the tasks in the db")
     @GetMapping
     public ResponseEntity<List<TaskDTO>> getAllTasks()
     {
@@ -32,15 +38,27 @@ import java.util.stream.Collectors;
         return ResponseEntity.ok(taskDTOS);
     }
 
+    @Operation(summary = "get the task by ID", description = "Returns the task that matches the given ID, including all available information.")
+    @Parameter(name = "id", description = "Id of the task to retrieve")
     @GetMapping("/{id}")
-    public ResponseEntity<TaskDTO>getTaskbyId(@PathVariable Long id)
-    {
+    public ResponseEntity<TaskDTO>getTaskbyId(@PathVariable Long id) {
         Task task = taskService.findById(id);
 
         TaskDTO taskDTO = new TaskDTO(task);
         return ResponseEntity.ok(taskDTO);
+
     }
 
+    @Operation(
+            summary = "Search task",
+            description = "Returns a list of tasks that match the optional filters: status, user, priority, start and end date.")
+    @Parameters ({
+        @Parameter(name = "status", description = "Filter by task status"),
+        @Parameter(name = "user", description = "Filter by user name"),
+        @Parameter(name = "startTime", description = "Filter by start date"),
+        @Parameter(name = "endDate", description = "Filter by end date"),
+        @Parameter(name = "priority", description = "Filter by priority"),
+    })
     @GetMapping("/search")
     public ResponseEntity<List<TaskDTO>> searchTasks(
             @RequestParam(required = false)TaskStatus status,
@@ -54,31 +72,39 @@ import java.util.stream.Collectors;
         return ResponseEntity.ok(taskDTOS);
     }
 
+
+    @Operation(summary = "Add a new Task", description = "Adds a new task on the db")
     @PostMapping
-    public Task addTask(@RequestBody Task task)
+    public ResponseEntity<TaskDTO> addTask(@RequestBody @Valid TaskDTO taskDTO)
     {
-       return taskService.addTask(task);
+        Task task = taskDTO.toEntity();
+        Task savedTask = taskService.addTask(task);
+       return ResponseEntity.status(201).body(new TaskDTO(savedTask));
     }
 
+    @Operation(
+            summary = "Updates an existing task",
+            description = "Modifies the fields of a task based on the given ID and the new values provided in the request body")
+    @Parameter(name = "id", description = "ID of the task")
     @PutMapping("/{id}")
     public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id, @RequestBody TaskDTO taskDTO)
     {
         Task updateTask = taskService.updateTask
                 (id,
-                        taskDTO.getTitle(),
-                        taskDTO.getDeadlineDate(),
-                        taskDTO.getStatus());
+                    taskDTO.getUser(),
+                    taskDTO.getTitle(),
+                    taskDTO.getDeadlineDate(),
+                    taskDTO.getStatus(),
+                    taskDTO.getDescription());
 
         TaskDTO responseDTO = new TaskDTO();
 
-        responseDTO.setTitle(updateTask.getTitle());
-        responseDTO.setDeadlineDate(updateTask.getDeadlineDate());
-        responseDTO.setStatus(updateTask.getStatus());
-
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(new TaskDTO(updateTask));
     }
 
 
+    @Operation(summary = "Delete a task", description = "Removes a task from the database based on the provided ID.")
+    @Parameter(name = "id", description = "ID of the task to be deleted")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id)
     {
